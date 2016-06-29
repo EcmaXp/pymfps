@@ -3,7 +3,7 @@ import sys
 import os
 import contextlib
 import argparse
-from subprocess import check_call, check_output
+from subprocess import Popen, check_call, check_output
 from tempfile import TemporaryDirectory
 from pathlib import Path
 
@@ -66,13 +66,12 @@ def compile_file(source, out=None):
     with TemporaryDirectory() as temp, keep_chdir(temp):
         target_p = (Path(temp) / "TARGET.exe")
 
-        # TODO: when call return != 0, raise another exception
-
-        check_call([
+        process = Popen([
             str(FL32_EXE),
             str(src_p),
             "/nologo",
             "/W0",
+            "/Op",
             "/link",
             "kernel32.lib",
             "/nologo",
@@ -83,17 +82,25 @@ def compile_file(source, out=None):
             '/out:TARGET.exe',
         ])
 
-        content = target_p.read_bytes()
-        out_p.write_bytes(content)
+        code = process.wait()
 
+        if code == 0:
+            content = target_p.read_bytes()
+            out_p.write_bytes(content)
 
+    return code == 0
+
+    
 def main():
-    # TODO: parse argument and redirect output
+    # TODO: parse argument, pass argument
     parser = argparse.ArgumentParser()
     parser.add_argument("source", metavar="FILE")
     parser.add_argument("--out", default=None)
     args = parser.parse_args()
-    compile_file(args.source, args.out)
+    
+    is_success = compile_file(args.source, args.out)
+    
+    sys.exit(0 if is_success else 1)
 
 
 if __name__ == "__main__":
