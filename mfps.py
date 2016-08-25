@@ -93,6 +93,8 @@ def compile_file(source, out=None):
     
 def main():
     # TODO: parse argument, pass argument
+    # TODO: set warning level?
+    
     parser = argparse.ArgumentParser()
     parser.add_argument("source", metavar="FILE")
     parser.add_argument("--out", default=None)
